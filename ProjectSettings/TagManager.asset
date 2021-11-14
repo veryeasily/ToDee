@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Ground
   - Collectible
+  - Win
   layers:
   - Default
   - TransparentFX

@@ -8,6 +8,7 @@ public class CameraController : MonoBehaviour
     public float speed = 1.0f;
 
     private Camera mainCamera;
+    private Vector3 vec = Vector3.zero;
 
     // Start is called before the first frame update
     void Start()
@@ -41,6 +42,6 @@ public class CameraController : MonoBehaviour
             endPosition.x = player.transform.position.x - 0.25f * width;
         }
 
-        transform.position = Vector3.Lerp(transform.position, endPosition, Time.deltaTime * speed);
+        transform.position = Vector3.SmoothDamp(transform.position, endPosition, ref vec, 0.005f);
     }
 }

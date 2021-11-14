@@ -5,23 +5,25 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    public Animator animator;
     public Rigidbody2D rb;
+    public Animator animator;
+    public GameObject winText;
     public float speed = 5.0f;
 
-    private float movementX = 0.0f;
-    private Vector2 vec = Vector2.zero;
-    private bool facingLeft = false;
+    private int score = 0;
     private bool jumping = false;
     private bool standing = false;
-    private int score = 0;
+    private float movementX = 0.0f;
+    private bool facingLeft = false;
+    private bool liftingOff = false;
+    private Vector2 vec = Vector2.zero;
 
 
     // // Start is called before the first frame update
-    // void Start()
-    // {
-
-    // }
+    void Start()
+    {
+        winText.SetActive(false);
+    }
 
     // // Update is called once per frame
     // void Update()
@@ -31,18 +33,15 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         animator.SetFloat("speed", Mathf.Abs(rb.velocity.x));
-        Vector2 scale = transform.localScale;
+
         if (rb.velocity.x < -0.01f && !facingLeft)
         {
-            scale.x = Mathf.Abs(scale.x) * -1.0f;
-            facingLeft = true;
+            Flip();
         }
-        if (rb.velocity.x > 0.01f && facingLeft)
+        else if (rb.velocity.x > 0.01f && facingLeft)
         {
-            scale.x = Mathf.Abs(scale.x);
-            facingLeft = false;
+            Flip();
         }
-        transform.localScale = scale;
     }
 
     void FixedUpdate()
@@ -55,6 +54,11 @@ public class PlayerController : MonoBehaviour
             float angle = Mathf.Lerp(rb.rotation, 0.0f, 0.1f);
             rb.SetRotation(angle);
         }
+
+        if (liftingOff)
+        {
+            rb.AddForce(new Vector2(0.0f, 20.0f));
+        }
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -65,15 +69,25 @@ public class PlayerController : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        if (!context.started) return;
-        if (jumping) return;
+        if (!context.performed) return;
 
-        rb.AddForce(new Vector2(0.0f, 8.0f), ForceMode2D.Impulse);
+        float value = context.ReadValue<float>();
+
+        if (value == 1 && !jumping)
+        {
+            rb.AddForce(new Vector2(0.0f, 3.0f), ForceMode2D.Impulse);
+            StartCoroutine(Jump());
+        }
+        else if (value == 0)
+        {
+            liftingOff = false;
+        }
     }
 
     public void OnStandUp(InputAction.CallbackContext context)
     {
         float value = context.ReadValue<float>();
+
         if (value == 1)
         {
             standing = true;
@@ -89,19 +103,16 @@ public class PlayerController : MonoBehaviour
         Application.Quit();
     }
 
-    void OnCollisionExit2D(Collision2D other)
-    {
-        if (other.collider.CompareTag("Ground"))
-        {
-            jumping = true;
-        }
-    }
-
     void OnCollisionEnter2D(Collision2D other)
     {
         if (other.collider.CompareTag("Ground"))
         {
             jumping = false;
+            liftingOff = false;
+        }
+        if (other.collider.CompareTag("Win"))
+        {
+            winText.SetActive(true);
         }
     }
 
@@ -112,5 +123,21 @@ public class PlayerController : MonoBehaviour
             other.gameObject.SetActive(false);
             score += 1;
         }
+    }
+
+    void Flip()
+    {
+        facingLeft = !facingLeft;
+        Vector3 localScale = transform.localScale;
+        float scaleX = localScale.x * -1.0f;
+        transform.localScale = new Vector3(scaleX, localScale.y, localScale.z);
+    }
+
+    IEnumerator Jump()
+    {
+        jumping = true;
+        liftingOff = true;
+        yield return new WaitForSeconds(0.25f);
+        liftingOff = false;
     }
 }

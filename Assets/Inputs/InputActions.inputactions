@@ -35,7 +35,7 @@
                     "id": "7100c823-fd19-4c2f-9674-e188656e3099",
                     "expectedControlType": "Button",
                     "processors": "",
-                    "interactions": ""
+                    "interactions": "Press(behavior=2)"
                 },
                 {
                     "name": "StandUp",
